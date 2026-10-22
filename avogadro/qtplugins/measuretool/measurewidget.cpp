@@ -12,6 +12,7 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QVBoxLayout>
 
+#include <QtCore/QEvent>
 #include <QtCore/QSignalBlocker>
 #include <QtGui/QColor>
 #include <QtGui/QPalette>
@@ -20,6 +21,19 @@
 #include <cmath>
 
 namespace Avogadro::QtPlugins {
+
+namespace {
+
+// An amber for the refusal message with at least 4.5:1 contrast against the
+// window background: a dark amber on light themes, a light one on dark themes.
+QColor warningColor(const QPalette& palette)
+{
+  const bool darkMode = palette.color(QPalette::WindowText).lightness() >
+                        palette.color(QPalette::Window).lightness();
+  return darkMode ? QColor(255, 176, 64) : QColor(150, 85, 0);
+}
+
+} // namespace
 
 MeasureWidget::MeasureWidget(QWidget* parent_)
   : QWidget(parent_), m_content(nullptr), m_emptyLabel(nullptr),
@@ -67,10 +81,7 @@ MeasureWidget::MeasureWidget(QWidget* parent_)
 
   m_messageLabel = new QLabel(m_content);
   m_messageLabel->setWordWrap(true);
-  // An amber that reads on both light and dark window backgrounds.
-  QPalette warningPalette = m_messageLabel->palette();
-  warningPalette.setColor(QPalette::WindowText, QColor(200, 120, 0));
-  m_messageLabel->setPalette(warningPalette);
+  updateMessageColor();
   m_messageLabel->hide();
 
   auto* contentLayout = new QVBoxLayout;
@@ -88,6 +99,21 @@ MeasureWidget::MeasureWidget(QWidget* parent_)
   setLayout(layout);
 
   setAtomCount(0);
+}
+
+void MeasureWidget::changeEvent(QEvent* event)
+{
+  // Pick the matching amber again when the user switches light/dark mode.
+  if (event->type() == QEvent::PaletteChange)
+    updateMessageColor();
+  QWidget::changeEvent(event);
+}
+
+void MeasureWidget::updateMessageColor()
+{
+  QPalette messagePalette = m_messageLabel->palette();
+  messagePalette.setColor(QPalette::WindowText, warningColor(palette()));
+  m_messageLabel->setPalette(messagePalette);
 }
 
 MeasureWidget::Row& MeasureWidget::row(MeasureField field)

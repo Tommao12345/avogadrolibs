@@ -11,6 +11,7 @@
 #include <array>
 
 class QDoubleSpinBox;
+class QEvent;
 class QLabel;
 
 namespace Avogadro {
@@ -83,6 +84,9 @@ Q_SIGNALS:
   /// new undo step rather than continuing the old one.
   void editingFinished(MeasureField field);
 
+protected:
+  void changeEvent(QEvent* event) override;
+
 private:
   struct Row
   {
@@ -93,6 +97,8 @@ private:
   };
 
   Row& row(MeasureField field);
+  /// Set the refusal message's color to suit the current light/dark palette.
+  void updateMessageColor();
   void addRow(MeasureField field, const QString& name, const QString& suffix,
               double minimum, double maximum, double singleStep, bool wrap);
 
