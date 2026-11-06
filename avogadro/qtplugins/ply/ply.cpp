@@ -133,7 +133,7 @@ void PLY::render()
   // fall back to the centre of the exported geometry's bounding box.
   Vector3f center = Vector3f::Zero();
   const auto* positions = m_molecule ? &m_molecule->atomPositions3d() : nullptr;
-  if (positions != nullptr && positions->size() > 0) {
+  if (positions != nullptr && !positions->empty()) {
     Vector3 sum = Vector3::Zero();
     for (const auto& position : *positions)
       sum += position;
